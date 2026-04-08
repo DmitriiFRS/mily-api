@@ -1,0 +1,237 @@
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String?   @unique
+  phoneNumber String?   @unique
+  password  String
+  name String
+  about String? @db.Text
+  reviewsCount Int   @default(0)
+  ratingSum    Int   @default(0)
+  rating Float @default(0)
+  isVerified Boolean @default(false)
+  hashedRefreshToken String?
+
+  roleId Int
+  avatarFileId Int?
+
+  role Role @relation(fields: [roleId], references: [id])
+  reviewsAsSender Review[] @relation("sender")
+  reviewsAsReceiver Review[] @relation("receiver")
+  avatarFile   File? @relation("user_avatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
+  ads Ad[]
+  chatParticipations ChatParticipant[]
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+  @@index([roleId])
+  @@index([rating(sort: Desc)])
+}
+
+model Ad {
+  id Int @id @default(autoincrement())
+  type AdType
+  status AdStatus @default(ACTIVE)
+  dateFrom DateTime
+  dateTo DateTime?
+  weightKg Int?
+  description String @db.Text
+  price Int?
+  servicePrice Int?
+  
+  cargoCategoryId Int
+  authorId Int
+  originCityId Int
+  destinationCityId Int
+  
+  originCity City @relation("origin_city", fields: [originCityId], references: [id])
+  destinationCity City @relation("destination_city", fields: [destinationCityId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+  cargoCategory CargoCategory @relation(fields: [cargoCategoryId], references: [id])
+  images AdImage[]
+  chatRooms ChatRoom[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ads")
+  @@index([originCityId])
+  @@index([destinationCityId])
+  @@index([originCityId, destinationCityId])
+}
+
+model ChatRoom {
+  id Int @id @default(autoincrement())
+
+  adId Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ChatParticipant[]
+  messages Message[]
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("chat_rooms")
+  @@index([adId])
+}
+
+model ChatParticipant {
+  id Int @id @default(autoincrement())
+
+  roomId Int
+  userId Int
+
+  lastReadAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_participants")
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id Int @id @default(autoincrement())
+  text String? @db.Text
+
+  roomId Int
+  senderId Int
+  fileId Int?
+
+  createdAt DateTime @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  file File? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+
+  @@map("messages")
+  @@index([roomId])
+  @@index([createdAt])
+}
+
+model AdImage {
+  id Int @id @default(autoincrement())
+  order Int
+
+  adId Int
+  fileId Int
+
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ad_images")
+  @@index([adId])
+  @@unique([adId, fileId])
+}
+
+model CargoCategory {
+  id Int @id @default(autoincrement())
+  name String @unique
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ads Ad[]
+
+  @@map("cargo_categories")
+}
+
+model City {
+  id Int @id @default(autoincrement())
+  name String @unique
+  code String @unique
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  adsAsOrigin Ad[] @relation("origin_city")
+  adsAsDestination Ad[] @relation("destination_city")
+
+  @@map("cities")
+}
+
+model Role {
+    id Int @id @default(autoincrement())
+    slug String @unique
+    name String @unique
+    isAdmin Boolean @default(false)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    users User[]
+
+    @@map("roles")
+}
+
+model Review {
+    id Int @id @default(autoincrement())
+    text String @db.Text
+    rating Int @default(0)
+
+    senderId Int
+    receiverId Int
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sender User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+    receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+    @@map("reviews")
+    @@index([senderId])
+    @@index([receiverId])
+}
+
+model File {
+  id Int @id @default(autoincrement())
+  originalName String
+  fileName String
+  path String
+  mimeType String
+  size Int
+  isOrphaned Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  avatarUsers User[] @relation("user_avatar")
+  adImages AdImage[]
+  messages Message[]
+
+  @@map("files")
+  @@index([isOrphaned])
+}
+
+enum AdType {
+  CARGO
+  TRANSPORT
+}
+
+enum AdStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
