@@ -1,22 +1,18 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { JwtPayload } from 'src/types/jwt/jwt-payload.type';
 import { RefreshTokenDto } from './dto/refresh.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
-  jwtService: any;
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
@@ -35,17 +31,12 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refreshTokens(
-    @Body() dto: RefreshTokenDto,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const decodedToken = this.jwtService.decode(dto.refreshToken) as JwtPayload;
+  async refreshTokens(@Body() dto: RefreshTokenDto): Promise<{ accessToken: string; refreshToken: string }> {
+    const decodedToken = this.jwtService.decode(dto.refreshToken);
     if (!decodedToken || !decodedToken.sub) {
       throw new ForbiddenException('Некорректный токен');
     }
 
-    return await this.authService.refreshTokens(
-      decodedToken.sub,
-      dto.refreshToken,
-    );
+    return await this.authService.refreshTokens(decodedToken.sub, dto.refreshToken);
   }
 }

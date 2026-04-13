@@ -15,6 +15,7 @@ model User {
   phoneNumber String?   @unique
   password  String
   name String
+  lastName String?
   about String? @db.Text
   reviewsCount Int   @default(0)
   ratingSum    Int   @default(0)
@@ -62,6 +63,7 @@ model Ad {
   author User @relation(fields: [authorId], references: [id])
   cargoCategory CargoCategory @relation(fields: [cargoCategoryId], references: [id])
   images AdImage[]
+  translations AdTranslation[]
   chatRooms ChatRoom[]
 
   createdAt DateTime @default(now())
@@ -179,6 +181,7 @@ model Role {
     updatedAt DateTime @updatedAt
 
     users User[]
+    translations RoleTranslation[]
 
     @@map("roles")
 }
@@ -234,4 +237,36 @@ enum AdStatus {
   COMPLETED
   ARCHIVED
 }
+
+// ====== translations
+
+model AdTranslation {
+  id Int @id @default(autoincrement())
+  locale String
+  title String
+  description String @db.Text
+
+  adId Int
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ad_translations")
+}
+
+model RoleTranslation {
+  id Int @id @default(autoincrement())
+  locale String
+  name String
+
+  roleId Int
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("role_translations")
+}
+
 

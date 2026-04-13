@@ -28,18 +28,11 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     if (!dto.email && !dto.phoneNumber) {
-      throw new BadRequestException(
-        'Необходимо указать email или номер телефона',
-      );
+      throw new BadRequestException('Необходимо указать email или номер телефона');
     }
-    const existingUser = await this.usersService.findByEmailOrPhone(
-      dto.email,
-      dto.phoneNumber,
-    );
+    const existingUser = await this.usersService.findByEmailOrPhone(dto.email, dto.phoneNumber);
     if (existingUser) {
-      throw new ConflictException(
-        'Пользователь с таким email или номером телефона уже существует',
-      );
+      throw new ConflictException('Пользователь с таким email или номером телефона уже существует');
     }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(dto.password, salt);
@@ -65,26 +58,17 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmailOrPhone(
-      dto.email,
-      dto.phoneNumber,
-    );
+    const user = await this.usersService.findByEmailOrPhone(dto.email, dto.phoneNumber);
     if (!user || !user.password) {
-      throw new UnauthorizedException(
-        'Неверный email, номер телефона или пароль',
-      );
+      throw new UnauthorizedException('Неверный email, номер телефона или пароль');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException(
-        'Неверный email, номер телефона или пароль',
-      );
+      throw new UnauthorizedException('Неверный email, номер телефона или пароль');
     }
     if (!user.isVerified) {
-      throw new ForbiddenException(
-        'Email не подтвержден. Пожалуйста, проверьте почту.',
-      );
+      throw new ForbiddenException('Email не подтвержден. Пожалуйста, проверьте почту.');
     }
     return this.loginUser(user);
   }
@@ -92,16 +76,9 @@ export class AuthService {
   private async loginUser(user: User & { role: Role }) {
     const tokens = await this.getTokens(user.id, user.email, user.phoneNumber);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
-
+    const userMe = await this.usersService.getMe(user.id);
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phoneNumber: user.phoneNumber,
-        roleId: user.roleId,
-        isVerified: user.isVerified,
-      },
+      user: userMe,
       ...tokens,
     };
   }
@@ -143,11 +120,7 @@ export class AuthService {
     });
   }
 
-  private async getTokens(
-    userId: number,
-    email: string | null,
-    phoneNumber: string | null,
-  ) {
+  private async getTokens(userId: number, email: string | null, phoneNumber: string | null) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
