@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 import { TranslationService } from '../translations/translations.service';
 import { UploadsService } from '../uploads/uploads.service';
@@ -6,6 +6,7 @@ import { PaginationService } from 'src/common/service/pagination.service';
 import { AdFilterDto } from './dto/ad-filter.dto';
 import { AdStatus, Prisma } from 'generated/prisma/client';
 import { AdMyFilterDto } from './dto/ad-my-filter.dto';
+import { AdUpdateStatusDto } from './dto/ad-update-status.dto';
 
 @Injectable()
 export class AdsService {
@@ -151,5 +152,52 @@ export class AdsService {
     }
     const data = this.translationService.translateDeep(ad, locale);
     return { ...data, translations: ad.translations };
+  }
+
+  async updateAdStatus(userId: number, id: number, dto: AdUpdateStatusDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    const ad = await this.prisma.ad.update({
+      where: { id, authorId: userId },
+      data: { status: dto.status },
+    });
+    if (!ad) {
+      throw new NotFoundException('Объявление не найдено');
+    }
+    return ad;
+  }
+
+  async deleteAd(userId: number, id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const ad = await this.prisma.ad.findUnique({
+      where: { id },
+      include: { images: true },
+    });
+    if (!ad) {
+      throw new NotFoundException('Объявление не найдено');
+    }
+    if (ad.authorId !== userId) {
+      throw new ForbiddenException('У вас нет прав на удаление этого объявления');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const image of ad.images) {
+        await this.uploadService.deleteFile(image.fileId, tx);
+      }
+      await tx.ad.delete({
+        where: { id },
+      });
+    });
+    return { message: 'Объявление успешно удалено' };
   }
 }
