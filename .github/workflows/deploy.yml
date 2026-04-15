@@ -59,6 +59,7 @@ jobs:
           rsync -avz -e "ssh" ./package.json ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/
           rsync -avz -e "ssh" ./prisma/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/prisma/
           rsync -avz -e "ssh" ./.env ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/.env
+          rsync -avz -e "ssh" ./prisma.config.ts ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/
 
       - name: Install production dependencies and deploy
         run: |
