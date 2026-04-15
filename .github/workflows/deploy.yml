@@ -63,9 +63,11 @@ jobs:
       - name: Install production dependencies and deploy
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-            cd ${{ secrets.TARGET_DIRECTORY }}
-            npm install --production
-            npx prisma generate
-            npx prisma migrate deploy
-            pm2 reload mily-api --update-env || pm2 start dist/src/main.js --name "mily-api"
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          cd ${{ secrets.TARGET_DIRECTORY }}
+          npm install --production
+          npx prisma generate
+          npx prisma migrate deploy
+          pm2 reload mily-api --update-env || pm2 start dist/src/main.js --name "mily-api"
           EOF
