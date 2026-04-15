@@ -27,6 +27,11 @@ jobs:
       - name: Build Nest.js Application
         run: npm run build
 
+      - name: Compile Seed
+        run: |
+          npm i -D @types/bcrypt
+          npx tsc prisma/seed.ts --module commonjs --esModuleInterop --skipLibCheck
+
       - name: Create .env file
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
