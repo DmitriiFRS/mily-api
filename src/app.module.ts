@@ -8,9 +8,11 @@ import { UsersModule } from './modules/users/users.module';
 import { AdsModule } from './modules/ads/ads.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { CargoCategoriesModule } from './modules/cargo-categories/cargo-categories.module';
+import { CitiesModule } from './modules/cities/cities.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, AdsModule, RolesModule, ReviewsModule],
+  imports: [PrismaModule, AuthModule, UsersModule, AdsModule, RolesModule, ReviewsModule, CargoCategoriesModule, CitiesModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
