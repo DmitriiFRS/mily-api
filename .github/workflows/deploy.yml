@@ -21,6 +21,9 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Build Nest.js Application
         run: npm run build
 
@@ -56,7 +59,6 @@ jobs:
           rsync -avz -e "ssh" ./package.json ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/
           rsync -avz -e "ssh" ./prisma/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/prisma/
           rsync -avz -e "ssh" ./.env ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/.env
-          rsync -avz -e "ssh" ./uploads/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/uploads/
 
       - name: Install production dependencies and deploy
         run: |
