@@ -1,20 +1,24 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsDate, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { AdType } from 'generated/prisma/enums';
+import { TransformToUpperCase } from 'src/common/decorators/transform-uppercase.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 export class AdFilterDto extends PaginationDto {
   @IsOptional()
-  @IsString()
-  from?: string;
-
-  @IsOptional()
-  @IsString()
-  to?: string;
+  @TransformToUpperCase()
+  @IsEnum(AdType)
+  type?: AdType;
 
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  date?: Date;
+  dateFrom?: string;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  dateTo?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -23,6 +27,20 @@ export class AdFilterDto extends PaginationDto {
   weight?: number;
 
   @IsOptional()
-  @IsString()
-  cargoType?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  cargoCategoryId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  originCityId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  destinationCityId?: number;
 }

@@ -20,32 +20,46 @@ export class AdsService {
   ) {}
 
   async getAds({ adFilterDto }: { adFilterDto: AdFilterDto }) {
-    const { page = 1, limit = 6, date, from, to, cargoType, weight } = adFilterDto;
+    const {
+      page = 1,
+      limit = 6,
+      dateFrom,
+      dateTo,
+      type,
+      weight,
+      originCityId,
+      destinationCityId,
+      cargoCategoryId,
+    } = adFilterDto;
 
     const where: Prisma.AdWhereInput = {};
 
     where.status = AdStatus.ACTIVE;
 
-    if (from) {
-      where.originCity = {
-        name: {
-          contains: from,
-        },
+    if (cargoCategoryId) {
+      where.cargoCategoryId = cargoCategoryId;
+    }
+
+    if (originCityId) {
+      where.originCityId = originCityId;
+    }
+
+    if (destinationCityId) {
+      where.destinationCityId = destinationCityId;
+    }
+
+    if (dateTo) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      where.dateTo = {
+        lte: endOfDay,
       };
     }
 
-    if (to) {
-      where.destinationCity = {
-        name: {
-          contains: to,
-        },
-      };
-    }
-
-    if (date) {
-      const startOfDay = new Date(date);
+    if (dateFrom) {
+      const startOfDay = new Date(dateFrom);
       startOfDay.setUTCHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
+      const endOfDay = new Date(dateFrom);
       endOfDay.setUTCHours(23, 59, 59, 999);
       where.dateFrom = {
         gte: startOfDay,
@@ -57,12 +71,8 @@ export class AdsService {
       where.weightKg = weight;
     }
 
-    if (cargoType) {
-      where.cargoCategory = {
-        name: {
-          contains: cargoType,
-        },
-      };
+    if (type) {
+      where.type = type;
     }
     const ads = await this.paginationService.getPaginatedItems({
       modelName: 'Ad',
@@ -71,7 +81,11 @@ export class AdsService {
       params: {
         orderBy: { createdAt: 'desc' },
         include: {
-          images: true,
+          images: {
+            include: {
+              file: true,
+            },
+          },
           translations: true,
           originCity: true,
           destinationCity: true,
@@ -80,10 +94,12 @@ export class AdsService {
               avatarFile: true,
             },
           },
+          cargoCategory: true,
         },
         where,
       },
     });
+    console.log(ads);
     return ads;
   }
 
