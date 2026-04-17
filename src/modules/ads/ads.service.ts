@@ -99,11 +99,20 @@ export class AdsService {
         where,
       },
     });
-    console.log(ads);
     return ads;
   }
 
-  async getMyAds({ userId, locale, adMyFilterDto }: { userId: number; locale: string; adMyFilterDto: AdMyFilterDto }) {
+  async getMyAds({
+    userId,
+    locale,
+    adMyFilterDto,
+    onlyActive,
+  }: {
+    userId: number;
+    locale: string;
+    adMyFilterDto: AdMyFilterDto;
+    onlyActive?: boolean;
+  }) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -122,6 +131,12 @@ export class AdsService {
     if (cargoStatus) {
       where.status = {
         equals: cargoStatus,
+      };
+    }
+
+    if (onlyActive) {
+      where.status = {
+        equals: AdStatus.ACTIVE,
       };
     }
 
@@ -162,18 +177,6 @@ export class AdsService {
       data: this.translationService.translateDeep(data, locale),
       meta,
     };
-  }
-
-  async getAdById(id: number, locale: string) {
-    const ad = await this.prisma.ad.findUnique({
-      where: { id },
-      include: { images: true, translations: true },
-    });
-    if (!ad) {
-      throw new NotFoundException('Ad with id ' + id + ' not found');
-    }
-    const data = this.translationService.translateDeep(ad, locale);
-    return { ...data, translations: ad.translations };
   }
 
   async updateAdStatus(userId: number, id: number, dto: AdUpdateStatusDto) {

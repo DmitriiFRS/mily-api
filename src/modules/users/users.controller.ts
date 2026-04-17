@@ -3,6 +3,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
   UploadedFile,
@@ -24,6 +26,11 @@ export class UsersController {
   @Get('me')
   async getMe(@GetUser('id') userId: number) {
     return this.usersService.getMe(userId);
+  }
+
+  @Get('/GetUserById/:userId')
+  async getUserById(@Param('userId', ParseIntPipe) userId: number) {
+    return this.usersService.getUserById(userId);
   }
 
   @UseGuards(JwtAuthGuard)

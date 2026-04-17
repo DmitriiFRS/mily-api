@@ -1,4 +1,6 @@
-export const getMeSelect = {
+import { Prisma } from 'generated/prisma/client';
+
+export const getMeSelect: Prisma.UserSelect = {
   id: true,
   email: true,
   phoneNumber: true,

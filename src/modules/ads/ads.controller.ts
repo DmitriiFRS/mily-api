@@ -33,10 +33,14 @@ export class AdsController {
     return this.adsService.getTranslatedAds({ locale, adFilterDto: query });
   }
 
-  @Get('getById/:id')
-  async getAdById(@Headers() headers: Record<string, string>, @Param('id') id: number) {
+  @Get('by-user/:id')
+  async getAdsByUserId(
+    @Headers() headers: Record<string, string>,
+    @Param('id') id: number,
+    @Query() query: AdMyFilterDto,
+  ) {
     const locale = headers['accept-language'] || 'ru';
-    return this.adsService.getAdById(id, locale);
+    return this.adsService.getMyAds({ userId: id, locale, adMyFilterDto: query, onlyActive: true });
   }
 
   @UseGuards(JwtAuthGuard)

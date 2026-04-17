@@ -4,6 +4,7 @@ import { PrismaService } from 'src/core/prisma.service';
 import { getMeSelect } from './select/getMeSelect';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { UploadsService } from '../uploads/uploads.service';
+import { getUserByIdSelect } from './select/getUserByIdSelect';
 
 @Injectable()
 export class UsersService {
@@ -96,5 +97,16 @@ export class UsersService {
       return updated;
     });
     return updatedUser;
+  }
+
+  async getUserById(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: getUserByIdSelect,
+    });
+    if (!user) {
+      throw new BadRequestException('Пользователь не найден');
+    }
+    return user;
   }
 }
