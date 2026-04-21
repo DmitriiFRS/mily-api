@@ -1,0 +1,2 @@
+-- DropForeignKey
+ALTER TABLE `chat_rooms` DROP FOREIGN KEY `chat_rooms_adId_fkey`;

@@ -64,7 +64,6 @@ model Ad {
   cargoCategory CargoCategory @relation(fields: [cargoCategoryId], references: [id])
   images AdImage[]
   translations AdTranslation[]
-  chatRooms ChatRoom[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -76,19 +75,14 @@ model Ad {
 }
 
 model ChatRoom {
-  id Int @id @default(autoincrement())
-
-  adId Int
-  
+  id Int @id @default(autoincrement())  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   participants ChatParticipant[]
   messages Message[]
-  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
 
   @@map("chat_rooms")
-  @@index([adId])
 }
 
 model ChatParticipant {
