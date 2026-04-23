@@ -18,10 +18,11 @@ import { SendMessageDto } from './dto/send-message.dto';
 
 @UseFilters(new WsExceptionFilter())
 @UsePipes(new ValidationPipe({ transform: true }))
-@WebSocketGateway({ namespace: 'chat', cors: true })
+@WebSocketGateway({ namespace: 'chat', cors: true, pingInterval: 10000, pingTimeout: 20000 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+  private activeUsers = new Map<number, Set<string>>();
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
@@ -35,16 +36,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new Error('Токен не передан');
       }
       const payload = this.jwtService.verify(token as string);
-      client.data.userId = payload.sub;
+      const userId = +payload.sub;
+      client.data.userId = userId;
+      if (!this.activeUsers.has(userId)) {
+        this.activeUsers.set(userId, new Set());
+        this.server.emit('userStatusChanged', { userId, isOnline: true });
+      }
+      this.activeUsers.get(userId)!.add(client.id);
       console.log(`Соединение установлено: ${client.id}, User ID: ${payload.sub}`);
-    } catch {
-      console.log(`Соединение отклонено: ${client.id}`);
+    } catch (error) {
+      console.log(`Соединение отклонено: ${client.id}. Причина: ${error.message}`);
       client.disconnect();
     }
   }
 
   handleDisconnect(client: Socket) {
+    const userId = +client.data.userId;
+    if (userId && this.activeUsers.has(userId)) {
+      const userConnections = this.activeUsers.get(userId)!;
+      userConnections.delete(client.id);
+      if (userConnections.size === 0) {
+        this.activeUsers.delete(userId);
+        this.server.emit('userStatusChanged', { userId, isOnline: false });
+      }
+    }
     console.log(`Соединение закрыто: ${client.id}`);
+  }
+
+  @SubscribeMessage('checkStatuses')
+  handleCheckStatuses(@ConnectedSocket() client: Socket, @MessageBody() userIds: number[]) {
+    const statuses = userIds.map((id) => ({
+      userId: id,
+      isOnline: this.activeUsers.has(id),
+    }));
+    return { event: 'statusesUpdate', data: statuses };
   }
 
   @SubscribeMessage('joinRoom')

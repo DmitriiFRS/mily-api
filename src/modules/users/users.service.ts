@@ -15,14 +15,17 @@ export class UsersService {
   ) {}
 
   async findByEmailOrPhone(email?: string, phoneNumber?: string): Promise<(User & { role: Role }) | null> {
-    const conditions: Prisma.UserWhereInput[] = [];
-    if (email) conditions.push({ email });
-    if (phoneNumber) conditions.push({ phoneNumber });
-    if (conditions.length === 0) {
+    if (!email && !phoneNumber) {
       throw new BadRequestException('Необходимо указать email или номер телефона');
     }
+
+    // Приоритет: если указан email — ищем строго по email,
+    // иначе — строго по phoneNumber.
+    // OR не используем, чтобы не вернуть чужого пользователя.
+    const where: Prisma.UserWhereInput = email ? { email } : { phoneNumber };
+
     const user = await this.prisma.user.findFirst({
-      where: { OR: conditions },
+      where,
       include: { role: true },
     });
     return user;

@@ -61,7 +61,18 @@ export class ChatService {
             participants: {
               where: { userId: { not: userId } },
               include: {
-                user: { select: { id: true, name: true, avatarFileId: true } },
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    lastName: true,
+                    avatarFile: {
+                      select: {
+                        path: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -78,11 +89,27 @@ export class ChatService {
           },
         });
 
+        const interlocutorParticipant = p.room.participants[0];
+        const interlocutor = interlocutorParticipant?.user || null;
+        const lastMessage = p.room.messages[0] || null;
+        let isMessageRead = false;
+        if (lastMessage) {
+          if (lastMessage.senderId === userId) {
+            if (interlocutorParticipant && interlocutorParticipant.lastReadAt >= lastMessage.createdAt) {
+              isMessageRead = true;
+            }
+          } else {
+            if (p.lastReadAt >= lastMessage.createdAt) {
+              isMessageRead = true;
+            }
+          }
+        }
+
         return {
           roomId: p.roomId,
           unreadCount,
-          interlocutor: p.room.participants[0]?.user || null,
-          lastMessage: p.room.messages[0] || null,
+          interlocutor,
+          lastMessage: lastMessage ? { ...lastMessage, isRead: isMessageRead } : null,
         };
       }),
     );

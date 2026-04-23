@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ChatGateway } from './chat.gateway';
+import { ChatController } from './chat.controller';
+import { ChatService } from './chat.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/core/prisma.service';
 @Module({
@@ -13,6 +15,7 @@ import { PrismaService } from 'src/core/prisma.service';
       }),
     }),
   ],
-  providers: [ChatGateway, PrismaService],
+  controllers: [ChatController],
+  providers: [ChatGateway, ChatService, PrismaService],
 })
 export class ChatModule {}

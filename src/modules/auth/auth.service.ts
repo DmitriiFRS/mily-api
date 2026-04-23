@@ -30,9 +30,18 @@ export class AuthService {
     if (!dto.email && !dto.phoneNumber) {
       throw new BadRequestException('Необходимо указать email или номер телефона');
     }
-    const existingUser = await this.usersService.findByEmailOrPhone(dto.email, dto.phoneNumber);
-    if (existingUser) {
-      throw new ConflictException('Пользователь с таким email или номером телефона уже существует');
+
+    if (dto.email) {
+      const existingByEmail = await this.usersService.findByEmailOrPhone(dto.email);
+      if (existingByEmail) {
+        throw new ConflictException('Пользователь с таким email уже существует');
+      }
+    }
+    if (dto.phoneNumber) {
+      const existingByPhone = await this.usersService.findByEmailOrPhone(undefined, dto.phoneNumber);
+      if (existingByPhone) {
+        throw new ConflictException('Пользователь с таким номером телефона уже существует');
+      }
     }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(dto.password, salt);

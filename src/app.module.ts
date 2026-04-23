@@ -10,9 +10,20 @@ import { RolesModule } from './modules/roles/roles.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CargoCategoriesModule } from './modules/cargo-categories/cargo-categories.module';
 import { CitiesModule } from './modules/cities/cities.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, AdsModule, RolesModule, ReviewsModule, CargoCategoriesModule, CitiesModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    AdsModule,
+    RolesModule,
+    ReviewsModule,
+    CargoCategoriesModule,
+    CitiesModule,
+    ChatModule,
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
