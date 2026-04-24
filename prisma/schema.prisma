@@ -33,6 +33,7 @@ model User {
   ads Ad[]
   chatParticipations ChatParticipant[]
   messages Message[]
+  tokens Token[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -217,6 +218,28 @@ model File {
 
   @@map("files")
   @@index([isOrphaned])
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  type      TokenType
+  expiresAt DateTime
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("tokens")
+  @@index([userId])
+  @@index([token])
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  PASSWORD_RESET
 }
 
 enum AdType {

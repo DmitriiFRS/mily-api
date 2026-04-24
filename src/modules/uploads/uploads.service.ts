@@ -2,33 +2,26 @@
 import { PrismaService } from 'src/core/prisma.service';
 import * as DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import { Prisma } from 'generated/prisma/client';
 
+@Injectable()
 export class UploadsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async processAndUploadFile(
-    file: Express.Multer.File,
-    tx?: Prisma.TransactionClient,
-  ) {
+  async processAndUploadFile(file: Express.Multer.File, tx?: Prisma.TransactionClient) {
     if (file.mimetype === 'image/svg+xml') {
       await this.sanitizeSvgOnDisk(file.path);
     }
     return this.saveToDatabase(file, tx);
   }
 
-  async processAndUploadFiles(
-    files: Express.Multer.File[],
-    tx?: Prisma.TransactionClient,
-  ) {
+  async processAndUploadFiles(files: Express.Multer.File[], tx?: Prisma.TransactionClient) {
     if (!files || files.length === 0) {
       throw new BadRequestException('Файлы не предоставлены');
     }
-    const uploadPromises = files.map((file) =>
-      this.processAndUploadFile(file, tx),
-    );
+    const uploadPromises = files.map((file) => this.processAndUploadFile(file, tx));
     return Promise.all(uploadPromises);
   }
 
@@ -45,10 +38,7 @@ export class UploadsService {
     }
   }
 
-  private async saveToDatabase(
-    file: Express.Multer.File,
-    tx?: Prisma.TransactionClient,
-  ) {
+  private async saveToDatabase(file: Express.Multer.File, tx?: Prisma.TransactionClient) {
     const db = tx || this.prisma;
     try {
       const relativePath = `/uploads/${file.filename}`;
@@ -63,9 +53,7 @@ export class UploadsService {
       });
     } catch {
       await fs.promises.unlink(file.path).catch(() => {});
-      throw new BadRequestException(
-        'Ошибка при сохранении файла в базу данных',
-      );
+      throw new BadRequestException('Ошибка при сохранении файла в базу данных');
     }
   }
 

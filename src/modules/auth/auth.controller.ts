@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -6,18 +6,50 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { RefreshTokenDto } from './dto/refresh.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from 'src/types/env/EnvironmentVariables.type';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
-
   @Get('ping')
   @UseGuards(JwtAuthGuard)
   ping() {
     return { status: 'ok' };
+  }
+  // ==============================================================================
+
+  @Get('redirect')
+  redirectToExp(@Query('token') token: string, @Res() res: Response) {
+    const expoUrl = this.configService.get('EXPO_APP_URL');
+
+    const finalUrl = `${expoUrl}/verify?token=${token}`;
+
+    return res.redirect(finalUrl);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return await this.authService.forgotPassword(dto);
+  }
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return await this.authService.resetPassword(dto);
+  }
+  @Get('verify')
+  async verifyEmail(@Query('token') token: string) {
+    return await this.authService.verifyEmail(token);
+  }
+  @Post('resend-verification')
+  async resendVerification(@Body('email') email: string) {
+    return await this.authService.resendVerificationEmail(email);
   }
 
   @Post('register')

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { Prisma, Role, User } from 'generated/prisma/client';
+import { Role, User } from 'generated/prisma/client';
 import { PrismaService } from 'src/core/prisma.service';
 import { getMeSelect } from './select/getMeSelect';
 import { UpdateMeDto } from './dto/update-me.dto';
@@ -14,21 +14,26 @@ export class UsersService {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  async findByEmailOrPhone(email?: string, phoneNumber?: string): Promise<(User & { role: Role }) | null> {
-    if (!email && !phoneNumber) {
-      throw new BadRequestException('Необходимо указать email или номер телефона');
+  async findByEmail(email: string): Promise<(User & { role: Role }) | null> {
+    if (!email) {
+      throw new BadRequestException('Необходимо указать email');
     }
 
-    // Приоритет: если указан email — ищем строго по email,
-    // иначе — строго по phoneNumber.
-    // OR не используем, чтобы не вернуть чужого пользователя.
-    const where: Prisma.UserWhereInput = email ? { email } : { phoneNumber };
-
-    const user = await this.prisma.user.findFirst({
-      where,
+    return this.prisma.user.findUnique({
+      where: { email },
       include: { role: true },
     });
-    return user;
+  }
+
+  async findByPhone(phoneNumber: string): Promise<(User & { role: Role }) | null> {
+    if (!phoneNumber) {
+      throw new BadRequestException('Необходимо указать номер телефона');
+    }
+
+    return this.prisma.user.findUnique({
+      where: { phoneNumber },
+      include: { role: true },
+    });
   }
 
   async getMe(userId: number) {
@@ -57,14 +62,14 @@ export class UsersService {
     }
 
     if (data.email && data.email !== currentUser.email) {
-      const existingUser = await this.findByEmailOrPhone(data.email);
+      const existingUser = await this.findByEmail(data.email);
       if (existingUser) {
         throw new BadRequestException('Email уже занят');
       }
     }
 
     if (data.phoneNumber && data.phoneNumber !== currentUser.phoneNumber) {
-      const existingUser = await this.findByEmailOrPhone(undefined, data.phoneNumber);
+      const existingUser = await this.findByPhone(data.phoneNumber);
       if (existingUser) {
         throw new BadRequestException('Номер телефона уже занят');
       }

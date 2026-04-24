@@ -11,6 +11,8 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CargoCategoriesModule } from './modules/cargo-categories/cargo-categories.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { ChatModule } from './modules/chat/chat.module';
     CargoCategoriesModule,
     CitiesModule,
     ChatModule,
+    UploadsModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

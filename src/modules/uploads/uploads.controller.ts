@@ -27,7 +27,8 @@ export class UploadsController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }),
           new FileTypeValidator({
-            fileType: 'image/(jpeg|png|gif|webp|svg\\+xml)',
+            fileType: /image\/(jpg|jpeg|png|gif|webp)/,
+            skipMagicNumbersValidation: true,
           }),
         ],
       }),
@@ -46,7 +47,8 @@ export class UploadsController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 30 * 1024 * 1024 }),
           new FileTypeValidator({
-            fileType: 'image/(jpeg|png|gif|webp|svg\\+xml)',
+            fileType: /image\/(jpg|jpeg|png|gif|webp)/,
+            skipMagicNumbersValidation: true,
           }),
         ],
       }),
