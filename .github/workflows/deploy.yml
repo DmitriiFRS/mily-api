@@ -40,6 +40,13 @@ jobs:
           JWT_ACCESS_EXPIRATION: ${{ secrets.JWT_ACCESS_EXPIRATION }}
           JWT_REFRESH_EXPIRATION: ${{ secrets.JWT_REFRESH_EXPIRATION }}
           UPLOAD_DIR: ${{ secrets.UPLOAD_DIR }}
+          EXPO_APP_URL: ${{ secrets.EXPO_APP_URL }}
+          CLIENT_URL: ${{ secrets.CLIENT_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
         run: |
           echo "DATABASE_URL=$DATABASE_URL" > .env
           echo "NODE_ENV=production" >> .env
@@ -47,7 +54,14 @@ jobs:
           echo "JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET" >> .env
           echo "JWT_ACCESS_EXPIRATION=$JWT_ACCESS_EXPIRATION" >> .env
           echo "JWT_REFRESH_EXPIRATION=$JWT_REFRESH_EXPIRATION" >> .env
+          echo "EXPO_APP_URL=$EXPO_APP_URL" >> .env
+          echo "CLIENT_URL=$CLIENT_URL" >> .env
           echo "UPLOAD_DIR=$UPLOAD_DIR" >> .env
+          echo "SMTP_HOST=$SMTP_HOST" >> .env
+          echo "SMTP_PORT=$SMTP_PORT" >> .env
+          echo "SMTP_USER=$SMTP_USER" >> .env
+          echo "SMTP_PASSWORD=$SMTP_PASSWORD" >> .env
+          echo "SMTP_FROM=$SMTP_FROM" >> .env
 
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2
