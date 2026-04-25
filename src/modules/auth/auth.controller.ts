@@ -11,6 +11,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/types/env/EnvironmentVariables.type';
 import { Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -35,28 +36,37 @@ export class AuthController {
     return res.redirect(finalUrl);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return await this.authService.forgotPassword(dto);
   }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return await this.authService.resetPassword(dto);
   }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Get('verify')
   async verifyEmail(@Query('token') token: string) {
     return await this.authService.verifyEmail(token);
   }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('resend-verification')
   async resendVerification(@Body('email') email: string) {
     return await this.authService.resendVerificationEmail(email);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
