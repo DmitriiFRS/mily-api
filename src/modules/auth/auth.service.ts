@@ -91,12 +91,12 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user || !user.password) {
-      throw new UnauthorizedException('Неверный email или пароль');
+      throw new ForbiddenException('Неверный email или пароль');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Неверный email или пароль');
+      throw new ForbiddenException('Неверный email или пароль');
     }
     if (!user.isVerified) {
       throw new ForbiddenException({
