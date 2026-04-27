@@ -38,6 +38,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = this.jwtService.verify(token as string);
       const userId = +payload.sub;
       client.data.userId = userId;
+
+      client.join(`user_${userId}`);
+
       if (!this.activeUsers.has(userId)) {
         this.activeUsers.set(userId, new Set());
         this.server.emit('userStatusChanged', { userId, isOnline: true });
@@ -143,8 +146,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         file: true,
       },
     });
+
     const roomName = roomId.toString();
     this.server.to(roomName).emit('newMessage', savedMessage);
+    const participants = await this.prisma.chatParticipant.findMany({
+      where: { roomId, userId: { not: userId } },
+      select: { userId: true },
+    });
+    participants.forEach((p) => {
+      this.server.to(`user_${p.userId}`).emit('chatListUpdate', savedMessage);
+    });
+
     return { status: 'success', messageId: savedMessage.id };
   }
 
