@@ -5,6 +5,7 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/core/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -16,6 +17,6 @@ import { PrismaService } from 'src/core/prisma.service';
     }),
   ],
   controllers: [ChatController],
-  providers: [ChatGateway, ChatService, PrismaService],
+  providers: [ChatGateway, ChatService, PrismaService, NotificationsService, ConfigService],
 })
 export class ChatModule {}

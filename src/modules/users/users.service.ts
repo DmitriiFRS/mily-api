@@ -5,6 +5,7 @@ import { getMeSelect } from './select/getMeSelect';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { UploadsService } from '../uploads/uploads.service';
 import { getUserByIdSelect } from './select/getUserByIdSelect';
+import { UpdatePushTokenDto } from './dto/update-push-token.dto';
 
 @Injectable()
 export class UsersService {
@@ -116,5 +117,28 @@ export class UsersService {
       throw new BadRequestException('Пользователь не найден');
     }
     return user;
+  }
+
+  async updatePushToken(userId: number, dto: UpdatePushTokenDto) {
+    const { token, device } = dto;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    await this.prisma.deviceToken.upsert({
+      where: { token: token },
+      update: {
+        userId: userId,
+        device: device,
+      },
+      create: {
+        token: token,
+        device: device,
+        userId: userId,
+      },
+    });
+    return { status: 'success' };
   }
 }

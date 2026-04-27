@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../uploads/multer.config';
+import { UpdatePushTokenDto } from './dto/update-push-token.dto';
 
 @Controller('users')
 export class UsersController {
@@ -47,5 +48,11 @@ export class UsersController {
       throw new BadRequestException('Файл не предоставлен или формат не поддерживается');
     }
     return this.usersService.updateMeAvatar(userId, file);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('push-token')
+  async updatePushToken(@GetUser('id') userId: number, @Body() dto: UpdatePushTokenDto) {
+    return this.usersService.updatePushToken(userId, dto);
   }
 }

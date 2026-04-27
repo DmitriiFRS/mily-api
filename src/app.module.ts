@@ -15,6 +15,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { MailModule } from './modules/mail/mail.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { APP_GUARD } from '@nestjs/core';
     ChatModule,
     UploadsModule,
     MailModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

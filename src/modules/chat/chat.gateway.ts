@@ -15,6 +15,8 @@ import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WsExceptionFilter } from 'src/common/decorators/ws-exception.filter';
 import { RoomIdDto } from './dto/room-id.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { ConfigService } from '@nestjs/config';
 
 @UseFilters(new WsExceptionFilter())
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -26,6 +28,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+    private readonly configService: ConfigService,
   ) {}
 
   handleConnection(client: Socket) {
@@ -112,8 +116,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('sendMessage')
   async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() payload: SendMessageDto) {
+    const baseUrl = this.configService.get<string>('EXPO_APP_URL')!;
     const userId = client.data.userId;
     const { roomId, text, fileId } = payload;
+    const deepLinkUrl = baseUrl.endsWith('/') ? `${baseUrl}chat/${roomId}` : `${baseUrl}/chat/${roomId}`;
     if (!text && !fileId) {
       throw new WsException('Сообщение не может быть пустым');
     }
@@ -155,6 +161,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     participants.forEach((p) => {
       this.server.to(`user_${p.userId}`).emit('chatListUpdate', savedMessage);
+      const pushTitle = savedMessage.sender.name || 'Новое сообщение';
+      const pushBody = text ? text : 'Вам отправили файл 📎';
+      this.notificationsService
+        .sendPushToUser(p.userId, pushTitle, pushBody, { url: deepLinkUrl })
+        .catch((err) => console.error(`Ошибка фоновой отправки пуша юзеру ${p.userId}:`, err));
     });
 
     return { status: 'success', messageId: savedMessage.id };
