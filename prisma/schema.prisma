@@ -61,7 +61,7 @@ model Ad {
   
   originCity City @relation("origin_city", fields: [originCityId], references: [id])
   destinationCity City @relation("destination_city", fields: [destinationCityId], references: [id])
-  author User @relation(fields: [authorId], references: [id])
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
   cargoCategory CargoCategory @relation(fields: [cargoCategoryId], references: [id])
   images AdImage[]
   translations AdTranslation[]
