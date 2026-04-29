@@ -35,6 +35,7 @@ model User {
   messages Message[]
   tokens Token[]
   deviceTokens DeviceToken[]
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,6 +43,26 @@ model User {
   @@map("users")
   @@index([roleId])
   @@index([rating(sort: Desc)])
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+  type NotificationType @default(CHAT_MESSAGE)
+  title String
+  body String @db.Text
+  data Json?
+  isRead Boolean @default(false)
+
+  referenceId Int?
+
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notifications")
+  @@index([userId, type, referenceId, isRead])
 }
 
 model DeviceToken {
@@ -272,6 +293,13 @@ enum AdStatus {
 enum DeviceType {
   MOBILE
   WEB
+}
+
+enum NotificationType {
+  CHAT_MESSAGE
+  SYSTEM
+  ORDER_UPDATE
+  REVIEW_RECEIVED
 }
 
 // ====== translations

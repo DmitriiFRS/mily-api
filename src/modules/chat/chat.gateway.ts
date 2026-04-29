@@ -17,6 +17,7 @@ import { RoomIdDto } from './dto/room-id.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
+import { NotificationType } from 'generated/prisma/enums';
 
 @UseFilters(new WsExceptionFilter())
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -155,16 +156,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomName = roomId.toString();
     this.server.to(roomName).emit('newMessage', savedMessage);
+
     const participants = await this.prisma.chatParticipant.findMany({
       where: { roomId, userId: { not: userId } },
       select: { userId: true },
     });
+
+    const socketsInRoom = await this.server.in(roomName).fetchSockets();
+    const activeUserIdsInRoom = socketsInRoom.map((s) => s.data.userId);
+
     participants.forEach((p) => {
       this.server.to(`user_${p.userId}`).emit('chatListUpdate', savedMessage);
+      if (activeUserIdsInRoom.includes(p.userId)) {
+        return;
+      }
       const pushTitle = savedMessage.sender.name || 'Новое сообщение';
       const pushBody = text ? text : 'Вам отправили файл 📎';
       this.notificationsService
-        .sendPushToUser(p.userId, pushTitle, pushBody, { url: deepLinkUrl })
+        .sendPushToUser(p.userId, pushTitle, pushBody, { url: deepLinkUrl }, NotificationType.CHAT_MESSAGE, roomId)
         .catch((err) => console.error(`Ошибка фоновой отправки пуша юзеру ${p.userId}:`, err));
     });
 
@@ -188,5 +197,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.to(roomId.toString()).emit('userReadMessages', { userId, roomId });
     return { status: 'success' };
+  }
+
+  @SubscribeMessage('leaveRoom')
+  async handleLeaveRoom(@ConnectedSocket() client: Socket, @MessageBody() payload: RoomIdDto) {
+    const roomName = payload.roomId.toString();
+    await client.leave(roomName);
+    return { event: 'leftRoom', roomId: payload.roomId };
   }
 }

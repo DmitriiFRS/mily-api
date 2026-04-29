@@ -118,11 +118,20 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: number, refreshToken: string) {
+  async refreshTokens(userId: number, refreshToken: string, deviceToken?: string) {
+    const clearDeviceToken = async () => {
+      if (deviceToken) {
+        await this.prisma.deviceToken.deleteMany({
+          where: { token: deviceToken },
+        });
+      }
+    };
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
     if (!user || !user.hashedRefreshToken) {
+      await clearDeviceToken();
       throw new ForbiddenException('Доступ запрещен.');
     }
 
@@ -131,12 +140,14 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
     } catch {
+      await clearDeviceToken();
       throw new UnauthorizedException('Срок действия Refresh Token истек');
     }
     const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
     const refreshTokenMatches = hash === user.hashedRefreshToken;
 
     if (!refreshTokenMatches) {
+      await clearDeviceToken();
       throw new ForbiddenException('Доступ запрещен.');
     }
     const tokens = await this.getTokens(user.id, user.email);
@@ -144,7 +155,7 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: number) {
+  async logout(userId: number, token?: string) {
     await this.prisma.user.update({
       where: {
         id: userId,
@@ -153,6 +164,14 @@ export class AuthService {
         hashedRefreshToken: null,
       },
     });
+    if (token) {
+      await this.prisma.deviceToken.deleteMany({
+        where: {
+          token: token,
+          userId: userId,
+        },
+      });
+    }
   }
 
   private async getTokens(userId: number, email: string | null) {

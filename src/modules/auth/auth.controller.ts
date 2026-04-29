@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/types/env/EnvironmentVariables.type';
 import { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import { LogoutDto } from './dto/logout.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -74,8 +75,8 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  async logout(@GetUser('id') userId: number): Promise<void> {
-    return this.authService.logout(userId);
+  async logout(@GetUser('id') userId: number, @Body() dto: LogoutDto): Promise<void> {
+    return this.authService.logout(userId, dto.token);
   }
 
   @Post('refresh')
@@ -85,6 +86,6 @@ export class AuthController {
       throw new ForbiddenException('Некорректный токен');
     }
 
-    return await this.authService.refreshTokens(decodedToken.sub, dto.refreshToken);
+    return await this.authService.refreshTokens(decodedToken.sub, dto.refreshToken, dto.deviceToken);
   }
 }
