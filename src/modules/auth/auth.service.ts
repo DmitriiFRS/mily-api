@@ -58,6 +58,7 @@ export class AuthService {
         name: dto.name,
         roleId: 1,
         isVerified: false,
+        isPremium: true, // временное решение, потом нужно будет поменять
         about: '',
       },
       include: {

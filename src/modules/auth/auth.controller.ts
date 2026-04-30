@@ -37,16 +37,25 @@ export class AuthController {
     return res.redirect(finalUrl);
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return await this.authService.forgotPassword(dto);
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return await this.authService.resetPassword(dto);
+  }
+
+  @Get('reset-password-redirect')
+  redirectResetPassword(@Query('token') token: string, @Res() res: Response) {
+    const expoUrl = this.configService.get<string>('EXPO_APP_URL')!;
+    const deepLink = expoUrl.endsWith('/')
+      ? `${expoUrl}reset-password?token=${token}`
+      : `${expoUrl}/reset-password?token=${token}`;
+    return res.redirect(deepLink);
   }
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })

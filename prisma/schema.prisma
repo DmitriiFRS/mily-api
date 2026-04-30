@@ -21,6 +21,7 @@ model User {
   ratingSum    Int   @default(0)
   rating Float @default(0)
   isVerified Boolean @default(false)
+  isPremium Boolean @default(false)
   hashedRefreshToken String?
 
   roleId Int
