@@ -12,4 +12,3 @@ export class CreateDirectionDto {
   @Min(1)
   destinationCityId: number;
 }
-//

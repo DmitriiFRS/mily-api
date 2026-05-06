@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -31,7 +32,7 @@ export class PopularDirectionsController {
   }
 
   @Get('admin')
-  adminGetAllPopularDirections(@Headers() headers: Record<string, string>, @Param() dto: PaginationDto) {
+  adminGetAllPopularDirections(@Headers() headers: Record<string, string>, @Query() dto: PaginationDto) {
     const locale = headers['accept-language'] || 'ru';
     return this.popularDirectionsService.adminGetAllPopularDirections({ locale, dto });
   }
