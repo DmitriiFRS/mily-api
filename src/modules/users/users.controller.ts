@@ -18,6 +18,8 @@ import { UpdateMeDto } from './dto/update-me.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../uploads/multer.config';
 import { UpdatePushTokenDto } from './dto/update-push-token.dto';
+import { AdminGuard } from 'src/common/guards/admin.guard';
+import { AdminOnly } from 'src/common/decorators/admin-only.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -54,5 +56,12 @@ export class UsersController {
   @Patch('push-token')
   async updatePushToken(@GetUser('id') userId: number, @Body() dto: UpdatePushTokenDto) {
     return this.usersService.updatePushToken(userId, dto);
+  }
+
+  @Get('get-me-admin')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @AdminOnly()
+  async getMeAdmin(@GetUser('id') userId: number) {
+    return await this.usersService.getMe(userId);
   }
 }

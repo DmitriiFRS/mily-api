@@ -198,8 +198,31 @@ model City {
 
   adsAsOrigin Ad[] @relation("origin_city")
   adsAsDestination Ad[] @relation("destination_city")
+  popularDirectionsAsOrigin PopularDirection[] @relation("popular_origin_city")
+  popularDirectionsAsDestination PopularDirection[] @relation("popular_destination_city")
+
+  translations CityTranslation[]
 
   @@map("cities")
+}
+
+model PopularDirection {
+  id Int @id @default(autoincrement())
+  imageId Int?
+  
+  originCityId Int
+  destinationCityId Int
+
+  imageFile File? @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  originCity City @relation("popular_origin_city", fields: [originCityId], references: [id])
+  destinationCity City @relation("popular_destination_city", fields: [destinationCityId], references: [id])
+  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+@@unique([originCityId, destinationCityId])
+  @@map("popular_directions")
 }
 
 model Role {
@@ -251,6 +274,7 @@ model File {
   avatarUsers User[] @relation("user_avatar")
   adImages AdImage[]
   messages Message[]
+  popularDirectionsFile PopularDirection[]
 
   @@map("files")
   @@index([isOrphaned])
@@ -332,6 +356,20 @@ model RoleTranslation {
   updatedAt DateTime @updatedAt
 
   @@map("role_translations")
+}
+
+model CityTranslation {
+  id Int @id @default(autoincrement())
+  locale String
+  name String
+
+  cityId Int
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("city_translations")
 }
 
 

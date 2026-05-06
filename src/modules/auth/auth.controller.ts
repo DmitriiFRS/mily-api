@@ -97,4 +97,10 @@ export class AuthController {
 
     return await this.authService.refreshTokens(decodedToken.sub, dto.refreshToken, dto.deviceToken);
   }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('admin/login')
+  async adminLogin(@Body() dto: LoginDto) {
+    return this.authService.adminLogin(dto);
+  }
 }

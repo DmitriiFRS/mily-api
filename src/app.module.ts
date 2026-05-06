@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaService } from './core/prisma.service';
 import { PrismaModule } from './core/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -16,6 +15,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PopularDirectionsModule } from './modules/popular-directions/popular-directions.module';
 
 @Module({
   imports: [
@@ -37,11 +37,11 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     UploadsModule,
     MailModule,
     NotificationsModule,
+    PopularDirectionsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    PrismaService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

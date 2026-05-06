@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { Module } from '@nestjs/common';
 import { UploadsController } from './uploads.controller';
-import { PrismaService } from 'src/core/prisma.service';
 import { UploadsService } from './uploads.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -36,7 +35,7 @@ import { diskStorage } from 'multer';
     }),
   ],
   controllers: [UploadsController],
-  providers: [UploadsService, PrismaService],
+  providers: [UploadsService],
   exports: [UploadsService],
 })
 export class UploadsModule {}
