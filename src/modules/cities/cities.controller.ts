@@ -16,6 +16,8 @@ export class CitiesController {
     return this.citiesService.getAllCities({ locale });
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @AdminOnly()
   @Get('admin')
   adminGetAllCities(@Headers() headers: Record<string, string>, @Query() dto: PaginationDto) {
     const locale = headers['accept-language'] || 'ru';
