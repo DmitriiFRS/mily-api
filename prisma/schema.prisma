@@ -184,6 +184,7 @@ model CargoCategory {
   updatedAt DateTime @updatedAt
 
   ads Ad[]
+  translations CargoCategoryTranslation[]
 
   @@map("cargo_categories")
 }
@@ -370,6 +371,20 @@ model CityTranslation {
   updatedAt DateTime @updatedAt
 
   @@map("city_translations")
+}
+
+model CargoCategoryTranslation {
+  id Int @id @default(autoincrement())
+  locale String
+  name String
+
+  cargoCategoryId Int
+  cargoCategory CargoCategory @relation(fields: [cargoCategoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cargo_category_translations")
 }
 
 

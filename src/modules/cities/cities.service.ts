@@ -76,6 +76,7 @@ export class CitiesService {
     }
     return this.prisma.city.update({ where: { id }, data: dto });
   }
+
   async deleteCity({ id }: { id: number }) {
     const city = await this.prisma.city.findUnique({
       where: { id },
