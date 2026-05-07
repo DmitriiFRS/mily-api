@@ -21,6 +21,7 @@ export class PopularDirectionsService {
       include: {
         originCity: { include: { translations: true } },
         destinationCity: { include: { translations: true } },
+        imageFile: true,
       },
     });
     return this.translationService.translateDeep(popularDirections, locale);
