@@ -20,7 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../uploads/multer.config';
 import { CreateDirectionDto } from './dto/create-direction.dto';
 import { AdminOnly } from 'src/common/decorators/admin-only.decorator';
-
+//
 @Controller('popular-directions')
 export class PopularDirectionsController {
   constructor(private readonly popularDirectionsService: PopularDirectionsService) {}
