@@ -233,7 +233,7 @@ export class AdsService {
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
     }
-    const adType = dto.dateTo ? AdType.TRANSPORT : AdType.CARGO;
+    const adType = dto.dateTo ? AdType.CARGO : AdType.TRANSPORT;
 
     if (adType === AdType.TRANSPORT && images?.length > 0) {
       throw new BadRequestException('Для объявлений типа TRANSPORT загрузка файлов запрещена');
@@ -244,7 +244,10 @@ export class AdsService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      const uploadedFiles = await this.uploadService.processAndUploadFiles(images, tx);
+      let uploadedFiles: { id: number }[] = [];
+      if (images && images.length > 0) {
+        uploadedFiles = await this.uploadService.processAndUploadFiles(images, tx);
+      }
       await tx.ad.create({
         data: {
           authorId: userId,
