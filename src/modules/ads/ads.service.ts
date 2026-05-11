@@ -236,7 +236,10 @@ export class AdsService {
     const adType = dto.dateTo ? AdType.CARGO : AdType.TRANSPORT;
 
     if (adType === AdType.TRANSPORT && images?.length > 0) {
-      throw new BadRequestException('Для объявлений типа TRANSPORT загрузка файлов запрещена');
+      throw new BadRequestException('Для объявлений типа "Транспорт" загрузка файлов запрещена');
+    }
+    if (adType === AdType.CARGO && (!images || images.length === 0)) {
+      throw new BadRequestException('Для объявлений типа "Груз" необходимо загрузить хотя бы одно фото');
     }
 
     if (!adType) {
