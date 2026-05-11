@@ -233,13 +233,12 @@ export class AdsService {
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
     }
-    let adType: AdType | null = null;
-    if (dto.dateTo) {
-      adType = AdType.TRANSPORT;
+    const adType = dto.dateTo ? AdType.TRANSPORT : AdType.CARGO;
+
+    if (adType === AdType.TRANSPORT && images?.length > 0) {
+      throw new BadRequestException('Для объявлений типа TRANSPORT загрузка файлов запрещена');
     }
-    if (!dto.dateTo) {
-      adType = AdType.CARGO;
-    }
+
     if (!adType) {
       throw new BadRequestException('Не удалось определить тип объявления');
     }
@@ -251,12 +250,14 @@ export class AdsService {
           authorId: userId,
           status: AdStatus.ACTIVE,
           ...dto,
-          images: {
-            create: uploadedFiles.map((file, index) => ({
-              fileId: file.id,
-              order: index,
-            })),
-          },
+          ...(uploadedFiles.length > 0 && {
+            images: {
+              create: uploadedFiles.map((file, index) => ({
+                fileId: file.id,
+                order: index,
+              })),
+            },
+          }),
         },
       });
     });
