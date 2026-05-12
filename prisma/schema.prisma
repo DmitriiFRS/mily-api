@@ -342,6 +342,8 @@ model AdTranslation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([adId, locale])
+  @@index([adId])
   @@map("ad_translations")
 }
 
@@ -356,6 +358,8 @@ model RoleTranslation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([roleId, locale])
+  @@index([roleId])
   @@map("role_translations")
 }
 
@@ -370,6 +374,8 @@ model CityTranslation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([cityId, locale])
+  @@index([cityId])
   @@map("city_translations")
 }
 
@@ -384,6 +390,8 @@ model CargoCategoryTranslation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([cargoCategoryId, locale])
+  @@index([cargoCategoryId])
   @@map("cargo_category_translations")
 }
 

@@ -14,7 +14,11 @@ export class CitiesService {
   ) {}
 
   async getAllCities({ locale }: { locale: string }) {
-    const cities = await this.prisma.city.findMany();
+    const cities = await this.prisma.city.findMany({
+      include: {
+        translations: true,
+      },
+    });
     return this.translationService.translateDeep(cities, locale);
   }
 

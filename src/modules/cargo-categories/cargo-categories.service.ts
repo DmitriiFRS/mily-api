@@ -14,7 +14,11 @@ export class CargoCategoriesService {
   ) {}
 
   async getAllCategories({ locale }: { locale: string }) {
-    const categories = await this.prisma.cargoCategory.findMany();
+    const categories = await this.prisma.cargoCategory.findMany({
+      include: {
+        translations: true,
+      },
+    });
     return this.translationService.translateDeep(categories, locale);
   }
 
