@@ -81,7 +81,7 @@ model DeviceToken {
 
 model Ad {
   id Int @id @default(autoincrement())
-  slug String? @unique @default(uuid())
+  slug String @unique @default(uuid())
   type AdType
   status AdStatus @default(ACTIVE)
   dateFrom DateTime
