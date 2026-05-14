@@ -117,6 +117,13 @@ export class AdsService {
         translations: true,
         originCity: true,
         destinationCity: true,
+        author: {
+          select: {
+            name: true,
+            rating: true,
+            avatarFile: true,
+          },
+        },
       },
     });
     if (!ad) {
