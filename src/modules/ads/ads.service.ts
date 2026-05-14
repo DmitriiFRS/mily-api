@@ -102,6 +102,26 @@ export class AdsService {
     return ads;
   }
 
+  async getAdBySlug(slug: string, locale: string) {
+    const ad = await this.prisma.ad.findUnique({
+      where: { slug },
+      include: {
+        images: {
+          include: {
+            file: true,
+          },
+        },
+        translations: true,
+        originCity: true,
+        destinationCity: true,
+      },
+    });
+    if (!ad) {
+      throw new NotFoundException('Объявление не найдено');
+    }
+    return this.translationService.translateDeep(ad, locale);
+  }
+
   async getMyAds({
     userId,
     locale,
