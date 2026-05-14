@@ -103,6 +103,9 @@ export class AdsService {
   }
 
   async getAdBySlug(slug: string, locale: string) {
+    if (!slug) {
+      throw new BadRequestException('Не указан slug объявления');
+    }
     const ad = await this.prisma.ad.findUnique({
       where: { slug },
       include: {

@@ -44,7 +44,7 @@ export class AdsController {
   }
 
   @Get('ad/:slug')
-  async getAdBySlug(@Headers() headers: Record<string, string>, @Param('id') slug: string) {
+  async getAdBySlug(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
     const locale = headers['accept-language'] || 'ru';
     return this.adsService.getAdBySlug(slug, locale);
   }
