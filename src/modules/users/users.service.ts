@@ -119,6 +119,17 @@ export class UsersService {
     return user;
   }
 
+  async getUserBySlug(slug: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { slug },
+      select: getUserByIdSelect,
+    });
+    if (!user) {
+      throw new BadRequestException('Пользователь не найден');
+    }
+    return user;
+  }
+
   async updatePushToken(userId: number, dto: UpdatePushTokenDto) {
     const { token, device } = dto;
     const user = await this.prisma.user.findUnique({
