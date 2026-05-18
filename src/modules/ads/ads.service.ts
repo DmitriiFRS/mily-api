@@ -121,6 +121,7 @@ export class AdsService {
           select: {
             name: true,
             rating: true,
+            slug: true,
             avatarFile: true,
           },
         },
