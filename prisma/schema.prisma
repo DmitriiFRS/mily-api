@@ -11,6 +11,7 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
+  slug String? @unique @default(uuid())
   email     String?   @unique
   phoneNumber String?   @unique
   password  String
