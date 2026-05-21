@@ -10,6 +10,7 @@ export const getMeSelect: Prisma.UserSelect = {
   reviewsCount: true,
   ratingSum: true,
   rating: true,
+  isVerified: true,
   role: {
     select: {
       id: true,
