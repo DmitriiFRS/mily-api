@@ -42,6 +42,7 @@ jobs:
           UPLOAD_DIR: ${{ secrets.UPLOAD_DIR }}
           EXPO_APP_URL: ${{ secrets.EXPO_APP_URL }}
           CLIENT_URL: ${{ secrets.CLIENT_URL }}
+          WEB_URL: ${{ secrets.WEB_URL }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
