@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Post, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -29,12 +29,17 @@ export class AuthController {
   // ==============================================================================
 
   @Get('redirect')
-  redirectToExp(@Query('token') token: string, @Res() res: Response) {
-    const expoUrl = this.configService.get('EXPO_APP_URL');
+  redirectToExp(@Query('token') token: string, @Req() req: Request, @Res() res: Response) {
+    const userAgent: string = req.headers['user-agent']?.toLowerCase() || '';
+    const isMobile = /mobile|iphone|ipad|android/i.test(userAgent);
 
-    const finalUrl = `${expoUrl}/verify?token=${token}`;
-
-    return res.redirect(finalUrl);
+    if (isMobile) {
+      const expoUrl = this.configService.get('EXPO_APP_URL');
+      return res.redirect(`${expoUrl}/verify?token=${token}`);
+    } else {
+      const webUrl = this.configService.get('WEB_URL');
+      return res.redirect(`${webUrl}/verify?token=${token}`);
+    }
   }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -50,12 +55,19 @@ export class AuthController {
   }
 
   @Get('reset-password-redirect')
-  redirectResetPassword(@Query('token') token: string, @Res() res: Response) {
-    const expoUrl = this.configService.get<string>('EXPO_APP_URL')!;
-    const deepLink = expoUrl.endsWith('/')
-      ? `${expoUrl}reset-password?token=${token}`
-      : `${expoUrl}/reset-password?token=${token}`;
-    return res.redirect(deepLink);
+  redirectResetPassword(@Query('token') token: string, @Req() req: Request, @Res() res: Response) {
+    const userAgent: string = req.headers['user-agent']?.toLowerCase() || '';
+    const isMobile = /mobile|iphone|ipad|android/i.test(userAgent);
+    if (isMobile) {
+      const expoUrl = this.configService.get('EXPO_APP_URL');
+      const deepLink = expoUrl.endsWith('/')
+        ? `${expoUrl}reset-password?token=${token}`
+        : `${expoUrl}/reset-password?token=${token}`;
+      return res.redirect(deepLink);
+    } else {
+      const webUrl = this.configService.get('WEB_URL');
+      return res.redirect(`${webUrl}/reset-password?token=${token}`);
+    }
   }
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })

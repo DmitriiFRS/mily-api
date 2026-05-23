@@ -10,4 +10,5 @@ export interface EnvironmentVariables {
   SMTP_FROM: string;
   CLIENT_URL: string;
   EXPO_APP_URL: string;
+  WEB_URL: string;
 }
