@@ -193,7 +193,7 @@ model CargoCategory {
 
 model City {
   id Int @id @default(autoincrement())
-  name String @unique
+  name String
   code String @unique
   
   createdAt DateTime @default(now())
@@ -206,6 +206,7 @@ model City {
 
   translations CityTranslation[]
 
+  @@index([name])
   @@map("cities")
 }
 
@@ -396,5 +397,4 @@ model CargoCategoryTranslation {
   @@index([cargoCategoryId])
   @@map("cargo_category_translations")
 }
-
 
