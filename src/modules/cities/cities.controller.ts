@@ -16,6 +16,12 @@ export class CitiesController {
     return this.citiesService.getAllCities({ locale });
   }
 
+  @Get('search')
+  searchCities(@Headers() headers: Record<string, string>, @Query('word') word: string) {
+    const locale = headers['accept-language'] || 'ru';
+    return this.citiesService.searchCities({ locale, word });
+  }
+
   @UseGuards(JwtAuthGuard, AdminGuard)
   @AdminOnly()
   @Get('admin')

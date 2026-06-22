@@ -22,6 +22,26 @@ export class CitiesService {
     return this.translationService.translateDeep(cities, locale);
   }
 
+  async searchCities({ locale, word }: { locale: string; word?: string }) {
+    const search = word?.trim();
+    if (!search) {
+      return [];
+    }
+    const cities = await this.prisma.city.findMany({
+      where: {
+        OR: [
+          { name: { contains: search } },
+          { translations: { some: { name: { contains: search } } } },
+        ],
+      },
+      take: 10,
+      include: {
+        translations: true,
+      },
+    });
+    return this.translationService.translateDeep(cities, locale);
+  }
+
   async adminGetAllCities({ locale, dto }: { locale: string; dto: PaginationDto }) {
     const cities = await this.paginationService.getPaginatedItems({
       modelName: 'City',
