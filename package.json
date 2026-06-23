@@ -98,6 +98,6 @@
     "testEnvironment": "node"
   },
   "prisma": {
-    "seed": "node -r dotenv/config prisma/seed.js"
+    "seed": "node -r dotenv/config dist/prisma/seed.js"
   }
 }
