@@ -1,145 +1,508 @@
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import * as bcrypt from 'bcrypt';
-import * as https from 'node:https';
-import * as readline from 'node:readline';
-import { createWriteStream, existsSync, mkdirSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { spawn } from 'node:child_process';
 
 const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
 const prisma = new PrismaClient({ adapter, log: ['info', 'warn', 'error'] });
-const GEONAMES_CITIES_URL =
-  process.env.GEONAMES_CITIES_URL || 'https://download.geonames.org/export/dump/cities500.zip';
-const GEONAMES_CITIES_ARCHIVE_PATH =
-  process.env.GEONAMES_CITIES_ARCHIVE_PATH || join(tmpdir(), 'geonames-cities500.zip');
-const WORLD_CITIES_BATCH_SIZE = Number(process.env.WORLD_CITIES_BATCH_SIZE || 1000);
 
-function downloadFile(url: string, filePath: string, redirects = 0): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (redirects > 5) {
-      reject(new Error('Too many redirects while downloading GeoNames cities'));
-      return;
-    }
+const CITY_NAMES = [
+  'Москва',
+  'Санкт-Петербург',
+  'Новосибирск',
+  'Екатеринбург',
+  'Казань',
+  'Нижний Новгород',
+  'Челябинск',
+  'Красноярск',
+  'Самара',
+  'Уфа',
+  'Ростов-на-Дону',
+  'Омск',
+  'Краснодар',
+  'Воронеж',
+  'Пермь',
+  'Волгоград',
+  'Саратов',
+  'Тюмень',
+  'Тольятти',
+  'Ижевск',
+  'Барнаул',
+  'Ульяновск',
+  'Иркутск',
+  'Хабаровск',
+  'Ярославль',
+  'Владивосток',
+  'Махачкала',
+  'Томск',
+  'Оренбург',
+  'Кемерово',
+  'Новокузнецк',
+  'Рязань',
+  'Набережные Челны',
+  'Астрахань',
+  'Пенза',
+  'Киров',
+  'Липецк',
+  'Чебоксары',
+  'Тула',
+  'Калининград',
+  'Балашиха',
+  'Курск',
+  'Ставрополь',
+  'Улан-Удэ',
+  'Сочи',
+  'Тверь',
+  'Магнитогорск',
+  'Иваново',
+  'Брянск',
+  'Белгород',
+  'Сургут',
+  'Владимир',
+  'Нижний Тагил',
+  'Архангельск',
+  'Чита',
+  'Симферополь',
+  'Калуга',
+  'Смоленск',
+  'Волжский',
+  'Курган',
+  'Орел',
+  'Череповец',
+  'Вологда',
+  'Саранск',
+  'Якутск',
+  'Тамбов',
+  'Грозный',
+  'Стерлитамак',
+  'Кострома',
+  'Петрозаводск',
+  'Новороссийск',
+  'Йошкар-Ола',
+  'Комсомольск-на-Амуре',
+  'Таганрог',
+  'Нижневартовск',
+  'Шахты',
+  'Дзержинск',
+  'Братск',
+  'Орск',
+  'Энгельс',
+  'Ангарск',
+  'Благовещенск',
+  'Старый Оскол',
+  'Великий Новгород',
+  'Псков',
+  'Мурманск',
+  'Петропавловск-Камчатский',
+  'Нальчик',
+  'Владикавказ',
+  'Черкесск',
+  'Элиста',
+  'Майкоп',
+  'Южно-Сахалинск',
+  'Ташкент',
+  'Самарканд',
+  'Наманган',
+  'Андижан',
+  'Бухара',
+  'Нукус',
+  'Карши',
+  'Фергана',
+  'Джизак',
+  'Ургенч',
+  'Навои',
+  'Термез',
+  'Коканд',
+  'Маргилан',
+  'Ангрен',
+  'Чирчик',
+  'Алмалык',
+  'Бекабад',
+  'Гулистан',
+  'Шахрисабз',
+  'Зарафшан',
+  'Алматы',
+  'Астана',
+  'Шымкент',
+  'Караганда',
+  'Актобе',
+  'Тараз',
+  'Павлодар',
+  'Усть-Каменогорск',
+  'Семей',
+  'Атырау',
+  'Костанай',
+  'Кызылорда',
+  'Уральск',
+  'Петропавловск',
+  'Актау',
+  'Темиртау',
+  'Туркестан',
+  'Кокшетау',
+  'Талдыкорган',
+  'Экибастуз',
+  'Рудный',
+  'Жезказган',
+  'Балхаш',
+  'Кентау',
+  'Бишкек',
+  'Ош',
+  'Джалал-Абад',
+  'Каракол',
+  'Токмок',
+  'Узген',
+  'Балыкчы',
+  'Кара-Балта',
+  'Нарын',
+  'Талас',
+  'Баткен',
+  'Кызыл-Кия',
+  'Душанбе',
+  'Худжанд',
+  'Бохтар',
+  'Куляб',
+  'Истаравшан',
+  'Турсунзаде',
+  'Канибадам',
+  'Исфара',
+  'Пенджикент',
+  'Вахдат',
+  'Гиссар',
+  'Хорог',
+  'Ашхабад',
+  'Туркменабат',
+  'Дашогуз',
+  'Мары',
+  'Балканабат',
+  'Байрамали',
+  'Туркменбаши',
+  'Теджен',
+  'Минск',
+  'Гомель',
+  'Могилев',
+  'Витебск',
+  'Гродно',
+  'Брест',
+  'Бобруйск',
+  'Барановичи',
+  'Борисов',
+  'Пинск',
+  'Орша',
+  'Мозырь',
+  'Солигорск',
+  'Новополоцк',
+  'Лида',
+  'Баку',
+  'Гянджа',
+  'Сумгаит',
+  'Мингечевир',
+  'Ширван',
+  'Нахичевань',
+  'Шеки',
+  'Ленкорань',
+  'Евлах',
+  'Хырдалан',
+  'Барда',
+  'Хачмаз',
+  'Ереван',
+  'Гюмри',
+  'Ванадзор',
+  'Вагаршапат',
+  'Абовян',
+  'Капан',
+  'Раздан',
+  'Армавир',
+  'Гавар',
+  'Арташат',
+  'Кишинев',
+  'Бельцы',
+  'Тирасполь',
+  'Бендеры',
+  'Рыбница',
+  'Кагул',
+  'Унгены',
+  'Сороки',
+  'Оргеев',
+  'Комрат',
+  'Киев',
+  'Харьков',
+  'Одесса',
+  'Днепр',
+  'Донецк',
+  'Запорожье',
+  'Львов',
+  'Кривой Рог',
+  'Николаев',
+  'Мариуполь',
+  'Луганск',
+  'Винница',
+  'Макеевка',
+  'Херсон',
+  'Полтава',
+  'Чернигов',
+  'Черкассы',
+  'Житомир',
+  'Сумы',
+  'Хмельницкий',
+  'Черновцы',
+  'Ровно',
+  'Ивано-Франковск',
+  'Тернополь',
+  'Кропивницкий',
+  'Луцк',
+  'Ужгород',
+  'Кременчуг',
+  'Белая Церковь',
+  'Мелитополь',
+  'Каменское',
+  'Тбилиси',
+  'Батуми',
+  'Кутаиси',
+  'Рустави',
+  'Гори',
+  'Зугдиди',
+  'Поти',
+  'Телави',
+  'Нью-Йорк',
+  'Лос-Анджелес',
+  'Чикаго',
+  'Хьюстон',
+  'Майами',
+  'Сан-Франциско',
+  'Сиэтл',
+  'Бостон',
+  'Вашингтон',
+  'Даллас',
+  'Атланта',
+  'Лас-Вегас',
+  'Торонто',
+  'Ванкувер',
+  'Монреаль',
+  'Мехико',
+  'Гвадалахара',
+  'Монтеррей',
+  'Сан-Паулу',
+  'Рио-де-Жанейро',
+  'Бразилиа',
+  'Буэнос-Айрес',
+  'Сантьяго',
+  'Лима',
+  'Богота',
+  'Медельин',
+  'Кито',
+  'Гуаякиль',
+  'Каракас',
+  'Монтевидео',
+  'Асунсьон',
+  'Ла-Пас',
+  'Панама',
+  'Сан-Хосе',
+  'Гавана',
+  'Санто-Доминго',
+  'Лондон',
+  'Париж',
+  'Берлин',
+  'Рим',
+  'Милан',
+  'Мадрид',
+  'Барселона',
+  'Лиссабон',
+  'Порту',
+  'Амстердам',
+  'Роттердам',
+  'Брюссель',
+  'Антверпен',
+  'Цюрих',
+  'Женева',
+  'Вена',
+  'Прага',
+  'Варшава',
+  'Краков',
+  'Будапешт',
+  'Бухарест',
+  'София',
+  'Белград',
+  'Загреб',
+  'Любляна',
+  'Братислава',
+  'Афины',
+  'Салоники',
+  'Стамбул',
+  'Анкара',
+  'Измир',
+  'Бурса',
+  'Анталья',
+  'Стокгольм',
+  'Гетеборг',
+  'Осло',
+  'Копенгаген',
+  'Хельсинки',
+  'Рейкьявик',
+  'Дублин',
+  'Эдинбург',
+  'Манчестер',
+  'Бирмингем',
+  'Глазго',
+  'Мюнхен',
+  'Гамбург',
+  'Франкфурт-на-Майне',
+  'Кельн',
+  'Дюссельдорф',
+  'Штутгарт',
+  'Неаполь',
+  'Турин',
+  'Флоренция',
+  'Венеция',
+  'Марсель',
+  'Лион',
+  'Ницца',
+  'Тулуза',
+  'Валенсия',
+  'Севилья',
+  'Бильбао',
+  'Пекин',
+  'Шанхай',
+  'Гуанчжоу',
+  'Шэньчжэнь',
+  'Гонконг',
+  'Макао',
+  'Тайбэй',
+  'Токио',
+  'Осака',
+  'Киото',
+  'Иокогама',
+  'Нагоя',
+  'Сеул',
+  'Пусан',
+  'Сингапур',
+  'Бангкок',
+  'Чиангмай',
+  'Куала-Лумпур',
+  'Джакарта',
+  'Сурабая',
+  'Манила',
+  'Себу',
+  'Ханой',
+  'Хошимин',
+  'Дананг',
+  'Пномпень',
+  'Янгон',
+  'Вьентьян',
+  'Дели',
+  'Нью-Дели',
+  'Мумбаи',
+  'Бангалор',
+  'Хайдарабад',
+  'Ченнаи',
+  'Калькутта',
+  'Пуна',
+  'Ахмадабад',
+  'Джайпур',
+  'Сурат',
+  'Карачи',
+  'Лахор',
+  'Исламабад',
+  'Дакка',
+  'Читтагонг',
+  'Коломбо',
+  'Катманду',
+  'Мале',
+  'Дубай',
+  'Абу-Даби',
+  'Доха',
+  'Эр-Рияд',
+  'Джидда',
+  'Эль-Кувейт',
+  'Манама',
+  'Маскат',
+  'Тегеран',
+  'Исфахан',
+  'Шираз',
+  'Мешхед',
+  'Багдад',
+  'Эрбиль',
+  'Дамаск',
+  'Бейрут',
+  'Амман',
+  'Иерусалим',
+  'Тель-Авив',
+  'Хайфа',
+  'Каир',
+  'Александрия',
+  'Гиза',
+  'Касабланка',
+  'Рабат',
+  'Марракеш',
+  'Тунис',
+  'Алжир',
+  'Оран',
+  'Триполи',
+  'Лагос',
+  'Абуджа',
+  'Кано',
+  'Аккра',
+  'Кумаси',
+  'Абиджан',
+  'Дакар',
+  'Найроби',
+  'Момбаса',
+  'Аддис-Абеба',
+  'Дар-эс-Салам',
+  'Кампала',
+  'Кигали',
+  'Йоханнесбург',
+  'Кейптаун',
+  'Дурбан',
+  'Претория',
+  'Луанда',
+  'Киншаса',
+  'Браззавиль',
+  'Сидней',
+  'Мельбурн',
+  'Брисбен',
+  'Перт',
+  'Аделаида',
+  'Канберра',
+  'Окленд',
+  'Веллингтон',
+  'Крайстчерч',
+] as const;
 
-    mkdirSync(dirname(filePath), { recursive: true });
-    const file = createWriteStream(filePath);
-
-    https
-      .get(url, (response) => {
-        const statusCode = response.statusCode || 0;
-        const location = response.headers.location;
-
-        if (statusCode >= 300 && statusCode < 400 && location) {
-          file.close();
-          response.resume();
-          downloadFile(new URL(location, url).toString(), filePath, redirects + 1)
-            .then(resolve)
-            .catch(reject);
-          return;
-        }
-
-        if (statusCode !== 200) {
-          file.close();
-          response.resume();
-          reject(new Error(`Failed to download GeoNames cities. Status code: ${statusCode}`));
-          return;
-        }
-
-        response.pipe(file);
-        file.on('finish', () => {
-          file.close();
-          resolve();
-        });
-      })
-      .on('error', reject);
-
-    file.on('error', reject);
-  });
-}
-
-function parseGeoNamesCity(line: string) {
-  const fields = line.split('\t');
-  const geonameId = fields[0];
-  const name = fields[1];
-
-  if (!geonameId || !name) {
-    return null;
-  }
-
-  return {
-    name,
-    code: `geonames:${geonameId}`,
-  };
+function toManualCityCode(name: string) {
+  return `manual:${name
+    .toLocaleLowerCase('ru-RU')
+    .replace(/ё/g, 'е')
+    .replace(/[^a-zа-я0-9]+/giu, '-')
+    .replace(/^-+|-+$/g, '')}`;
 }
 
 async function seedWorldCities() {
-  if (process.env.SKIP_WORLD_CITIES_SEED === 'true') {
-    console.info('World cities seed skipped');
+  if (process.env.SKIP_WORLD_CITIES_SEED === 'true' || process.env.SKIP_CITIES_SEED === 'true') {
+    console.info('Cities seed skipped');
     return;
   }
 
-  if (!existsSync(GEONAMES_CITIES_ARCHIVE_PATH) || statSync(GEONAMES_CITIES_ARCHIVE_PATH).size === 0) {
-    console.info(`Downloading GeoNames cities from ${GEONAMES_CITIES_URL}`);
-    await downloadFile(GEONAMES_CITIES_URL, GEONAMES_CITIES_ARCHIVE_PATH);
-  }
-
-  console.info(`Importing GeoNames cities from ${GEONAMES_CITIES_ARCHIVE_PATH}`);
-
-  const unzip = spawn('unzip', ['-p', GEONAMES_CITIES_ARCHIVE_PATH], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  const unzipClosed = new Promise<number | null>((resolve, reject) => {
-    unzip.on('error', reject);
-    unzip.on('close', resolve);
-  });
-  let unzipError = '';
-  unzip.stderr.on('data', (chunk) => {
-    unzipError += chunk.toString();
+  const deletedGeoNamesCities = await prisma.city.deleteMany({
+    where: {
+      code: { startsWith: 'geonames:' },
+      adsAsOrigin: { none: {} },
+      adsAsDestination: { none: {} },
+      popularDirectionsAsOrigin: { none: {} },
+      popularDirectionsAsDestination: { none: {} },
+    },
   });
 
-  const rows: { name: string; code: string }[] = [];
-  let parsedCount = 0;
-  let createdCount = 0;
-
-  const flushRows = async () => {
-    if (rows.length === 0) {
-      return;
-    }
-    const result = await prisma.city.createMany({
-      data: rows.splice(0, rows.length),
-      skipDuplicates: true,
-    });
-    createdCount += result.count;
-  };
-
-  const lines = readline.createInterface({
-    input: unzip.stdout,
-    crlfDelay: Infinity,
+  const cityNames = [...new Set(CITY_NAMES)];
+  const result = await prisma.city.createMany({
+    data: cityNames.map((name) => ({
+      name,
+      code: toManualCityCode(name),
+    })),
+    skipDuplicates: true,
   });
 
-  for await (const line of lines) {
-    const city = parseGeoNamesCity(line);
-    if (!city) {
-      continue;
-    }
-    rows.push(city);
-    parsedCount += 1;
-
-    if (rows.length >= WORLD_CITIES_BATCH_SIZE) {
-      await flushRows();
-    }
-  }
-
-  await flushRows();
-
-  const exitCode = await unzipClosed;
-  if (exitCode !== 0) {
-    throw new Error(`Failed to unzip GeoNames cities: ${unzipError.trim()}`);
-  }
-
-  console.info(`GeoNames cities parsed: ${parsedCount}, created: ${createdCount}`);
+  console.info(
+    `Russian city seed completed. Total: ${cityNames.length}, created: ${result.count}, deleted GeoNames: ${deletedGeoNamesCities.count}`,
+  );
 }
 
 async function main() {
