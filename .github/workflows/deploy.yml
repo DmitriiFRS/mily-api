@@ -27,11 +27,6 @@ jobs:
       - name: Build Nest.js Application
         run: npm run build
 
-      - name: Compile Seed
-        run: |
-          npm i -D @types/bcrypt
-          npx tsc prisma/seed.ts --module commonjs --esModuleInterop --skipLibCheck
-
       - name: Create .env file
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -78,7 +73,7 @@ jobs:
         run: |
           rsync -avz --delete -e "ssh" ./dist/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/dist/
           rsync -avz -e "ssh" ./package.json ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/
-          rsync -avz -e "ssh" ./prisma/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/prisma/
+          rsync -avz --delete -e "ssh" ./prisma/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/prisma/
           rsync -avz -e "ssh" ./.env ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/.env
           rsync -avz -e "ssh" ./prisma.config.ts ${{ secrets.USERNAME }}@${{ secrets.HOST }}:${{ secrets.TARGET_DIRECTORY }}/
 
@@ -91,5 +86,6 @@ jobs:
           npm install --production
           npx prisma generate
           npx prisma migrate deploy
+          npx prisma db seed
           pm2 reload mily-api --update-env || pm2 start dist/src/main.js --name "mily-api"
           EOF
